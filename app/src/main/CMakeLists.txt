@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10.2)
 
 include_directories(${CMAKE_SOURCE_DIR}/cpp/include)
 
-file(GLOB_RECURSE allCpp *.c *.h *.cpp)
+file(GLOB_RECURSE allCpp *.cpp *.h)
 
 # 设置库文件的路径别名
 set(JNILIB_PATH ${CMAKE_SOURCE_DIR}/jniLibs/${CMAKE_ANDROID_ARCH_ABI})
@@ -40,6 +40,11 @@ find_library(
 target_link_libraries(
         native-lib
         ${log-lib}
+        z
+        # 视频渲染需要用到ANativeWindow
+        android
+        # 播放音频
+        OpenSLES
         avcodec
         avformat
         avfilter
