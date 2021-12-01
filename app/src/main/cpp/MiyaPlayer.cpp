@@ -23,7 +23,8 @@ MiyaPlayer::~MiyaPlayer() {
     }
 }
 
-void *task_prepare(void *args) {
+// =====================================Prepare=======================================
+void *thread_prepare(void *args) {
     auto *player = static_cast<MiyaPlayer *>(args);
     player->_prepare();
     return nullptr;
@@ -100,9 +101,10 @@ void MiyaPlayer::_prepare() {
 
         // 第十步：从编解码器参数中获取流的类型
         if (parameters->codec_type == AVMEDIA_TYPE_AUDIO) {
-            audio_channel = new AudioChannel();
+            audio_channel = new AudioChannel(i, codecContext);
         } else if (parameters->codec_type == AVMEDIA_TYPE_VIDEO) {
-            video_channel = new VideoChannel();
+            video_channel = new VideoChannel(i, codecContext);
+            video_channel->setRenderCallback(renderCallback);
         }
     }
 
@@ -122,5 +124,58 @@ void MiyaPlayer::_prepare() {
 }
 
 void MiyaPlayer::prepare() {
-    pthread_create(&pid_prepare, nullptr, task_prepare, this);
+    pthread_create(&pid_prepare, nullptr, thread_prepare, this);
+}
+
+// =====================================Prepare=======================================
+
+
+
+// ======================================Start========================================
+void *thread_start(void *args) {
+    auto *player = static_cast<MiyaPlayer *>(args);
+    player->_start();
+    return nullptr;
+}
+
+void MiyaPlayer::start() {
+    isPlaying = true;
+
+    if (video_channel) {
+        video_channel->start();
+    }
+
+    pthread_create(&pid_start, nullptr, thread_start, this);
+}
+
+void MiyaPlayer::_start() {
+    while (isPlaying) {
+        // AVPacket -> 压缩数据包中可能含有音频也可能含有视频
+        AVPacket *packet = av_packet_alloc();
+        int result = av_read_frame(context, packet);
+        if (!result) {
+            if (video_channel && video_channel->stream_index == packet->stream_index) {
+                // 视频压缩数据包
+                video_channel->packets.insertToQueue(packet);
+            } else if (audio_channel && audio_channel->stream_index == packet->stream_index) {
+                // 音频压缩数据包
+//                audio_channel->packets.insertToQueue(packet);
+            }
+        } else if (result == AVERROR_EOF) {
+            // TODO 文件读取完毕，但是要考虑是否已播放完成
+
+        } else {
+            break;
+        }
+    } // End While
+
+    isPlaying = false;
+    video_channel->stop();
+    audio_channel->stop();
+}
+
+// ======================================Start========================================
+
+void MiyaPlayer::setRenderCallback(RenderCallback renderCallback) {
+    this->renderCallback = renderCallback;
 }

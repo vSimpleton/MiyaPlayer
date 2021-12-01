@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(mBinding.root)
 
+        mMiyaPlayer.setSurfaceView(mBinding.surfaceView)
         mMiyaPlayer.dataSource = File("$filesDir${File.separator}video_1.mp4").absolutePath
         mMiyaPlayer.setOnPreparedListener(object : OnPreparedListener {
             override fun onPrepared() {

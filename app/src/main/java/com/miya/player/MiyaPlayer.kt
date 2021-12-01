@@ -1,5 +1,9 @@
 package com.miya.player
 
+import android.view.Surface
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+
 
 /**
  * NAME: vSimpleton
@@ -7,7 +11,7 @@ package com.miya.player
  * DESC:
  */
 
-class MiyaPlayer {
+class MiyaPlayer: SurfaceHolder.Callback {
 
     companion object {
         init {
@@ -32,6 +36,7 @@ class MiyaPlayer {
 
     private var onPreparedListener: OnPreparedListener? = null
     private var onErrorListener: OnErrorListener? = null
+    private var surfaceHolder: SurfaceHolder? = null
 
     // 媒体源（文件路径或直播地址RTMP）
     var dataSource = ""
@@ -90,5 +95,26 @@ class MiyaPlayer {
     external fun startNative()
     external fun stopNative()
     external fun releaseNative()
+    private external fun setSurfaceNative(surface: Surface)
+
+    fun setSurfaceView(surfaceView: SurfaceView) {
+        if (surfaceHolder != null) {
+            surfaceHolder?.removeCallback(this)
+        }
+        surfaceHolder = surfaceView.holder
+        surfaceHolder?.addCallback(this)
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        setSurfaceNative(holder.surface)
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+
+    }
 
 }

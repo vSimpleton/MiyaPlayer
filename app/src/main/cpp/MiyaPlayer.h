@@ -19,10 +19,14 @@ class MiyaPlayer {
 private:
     char *data_source = 0;
     pthread_t pid_prepare;
-    AVFormatContext *context = 0;
+    pthread_t pid_start;
+    AVFormatContext *context = 0; // 媒体上下文
     AudioChannel *audio_channel = 0;
     VideoChannel *video_channel = 0;
     JNICallbackHelper *helper = 0;
+    bool isPlaying = false; // 是否正在播放
+
+    RenderCallback renderCallback;
 
 public:
     MiyaPlayer(const char *data_source, JNICallbackHelper *pHelper);
@@ -32,6 +36,12 @@ public:
     void prepare();
 
     void _prepare();
+
+    void start();
+
+    void _start();
+
+    void setRenderCallback(RenderCallback renderCallback);
 };
 
 
